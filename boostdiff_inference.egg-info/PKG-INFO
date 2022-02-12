@@ -1,0 +1,18 @@
+Metadata-Version: 2.1
+Name: boostdiff-inference
+Version: 1.0
+Summary: Boosted differential trees algorithm
+Home-page: http://github.com/gihannagalindez/boostdiff_inference
+Author: Gihanna Galindez
+Author-email: gihanna.galindez@plri.de
+License: MIT
+Keywords: differential network inference
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Classifier: Topic :: Scientific/Engineering :: Bio-Informatics
+
+UNKNOWN
+
