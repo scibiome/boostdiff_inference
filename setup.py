@@ -49,11 +49,9 @@ if USE_CYTHON:
     cmdclass = { 'build_ext': build_ext }
 else:
     ext_modules = [Extension("boostdiff.differential_trees.arandom", ["boostdiff/differential_trees/arandom.c"]),
-                 Extension("boostdiff.differential_trees.utils", ["boostdiff/differential_trees/utils.c"]),
                  Extension("boostdiff.differential_trees.splitter", ["boostdiff/differential_trees/splitter.c"]),
-                 Extension("boostdiff.differential_trees.diff_tree", ["boostdiff/differential_trees/diff_tree.c"]),
-                 Extension("boostdiff.differential_trees.splitter_max", ["boostdiff/differential_trees/splitter_max.c"]),
-                 Extension("boostdiff.differential_trees.diff_tree_max", ["boostdiff/differential_trees/diff_tree_max.c"]),]
+                 Extension("boostdiff.differential_trees.utils", ["boostdiff/differential_trees/utils.c"]),
+                 Extension("boostdiff.differential_trees.diff_tree", ["boostdiff/differential_trees/diff_tree.c"]),]
 
 if sys.version_info[0] == 2:
     raise Exception('Python 2.x is not supported')
