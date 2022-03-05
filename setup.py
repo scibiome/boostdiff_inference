@@ -5,7 +5,7 @@
 # was previously created using Cython).
 # Set it to 'auto' to build with Cython if available, otherwise
 # from the C file.
-USE_CYTHON = True
+USE_CYTHON = False
 
 # https://stackoverflow.com/questions/49471084/prepare-c-based-cython-package-to-publish-on-pypi
 
