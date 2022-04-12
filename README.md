@@ -9,10 +9,6 @@ The network is inferred by building AdaBoost ensembles of differential trees.
 
 ## Installation
 
-To install the package from PyPI please run:
-
-`pip install boostdiff` 
-
 To install the package from git:
 
 `git clone https://github.com/gihannagalindez/boostdiff/.git  && cd boostdiff`
