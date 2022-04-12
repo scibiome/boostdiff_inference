@@ -152,10 +152,10 @@ cdef class Splitter:
         
         Parameters
         ----------
-        X : object
+        X_control, X_disease : object
             This contains the inputs. Usually it is a 2d numpy array.
-        y : ndarray, dtype=double
-            This is the vector of targets, or true labels, for the samples
+        y_disease, y_control : ndarray, dtype=double
+            This is the vector of expression levels for the disease and control samples
         """
         
         # self.rand_r_state = self.random_state.randint(0, RAND_R_MAX)
@@ -170,10 +170,7 @@ cdef class Splitter:
         
         cdef SIZE_t n_features = X_disease.shape[1]
         cdef SIZE_t* features = safe_realloc(&self.features, n_features)
-        
-        # Added for splitter_limit
-        # cdef SIZE_t* features_sofar = safe_realloc(&self.features, n_features)
-        
+                
         self.n_samples_disease = n_samples_disease
         self.n_samples_control = n_samples_control
         
@@ -264,7 +261,7 @@ cdef class Splitter:
         
     cdef int reset_disease(self) nogil except -1:
 
-        """Reset the criterion at pos=start.
+        """Reset the splitter at pos=start.
         """
 
         self.sum_left_disease = 0.0
@@ -281,7 +278,7 @@ cdef class Splitter:
     
     cdef int reset_control(self) nogil except -1:
 
-        """Reset the criterion at pos=start.
+        """Reset the splitter at pos=start.
         """
 
         self.sum_left_control = 0.0
@@ -298,7 +295,7 @@ cdef class Splitter:
     
     cdef int reverse_reset_disease(self) nogil except -1:
 
-        """Reset the criterion at pos=end.
+        """Reset the splitter at pos=end.
         """
         
         self.sum_right_disease = 0.0
@@ -315,7 +312,7 @@ cdef class Splitter:
       
     cdef int reverse_reset_control(self) nogil except -1:
 
-        """Reset the criterion at pos=end
+        """Reset the splitter at pos=end
         """
         
         self.sum_right_control = 0.0

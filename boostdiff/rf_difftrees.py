@@ -66,7 +66,7 @@ class RFDiff():
                           n_disease, n_control,
                           self.max_depth, self.max_features)
             
-            tree.build(X_disease_input, X_control_input, y_disease, y_control)  
+            tree.build(X_disease_input, X_control_input, y_disease, y_control, i)  
     
             # Step 2: Extract the variable importances
             if self.variable_importance == "disease_improvement":

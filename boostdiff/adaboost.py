@@ -195,6 +195,8 @@ class AdaBoostDiffRegressor():
         self.estimator_count +=1        
         
         y_predict_append = self.predict(X_disease.values).flatten()
+        print("y_predict_append", y_predict_append)
+        print("output_disease", output_disease)
         y_predict_append_con = self.predict(X_control.values).flatten()
             
         error_mean_append = np.absolute(y_predict_append - output_disease)
