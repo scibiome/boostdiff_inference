@@ -40,7 +40,7 @@ Note that the first column should be named "Gene".
 Import the BoostDiff package:
 
 ```python
-from boostdiff.main import BoostDiff
+from boostdiff.main_boostdiff import BoostDiff
 ```
 
 ### Run BoostDiff 
