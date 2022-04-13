@@ -3,7 +3,7 @@ BoostDiff (Boosted Differential Trees) - Tree-based Inference of Differential Ne
 
 
 ## General info
-The python package BoostDiff (Boosted Differential Trees) is a tree-based method for inferring differential networks from large-scale transcriptomics data 
+BoostDiff is a tree-based method for inferring differential networks from large-scale transcriptomics data 
 by simultaneously comparing data from two biological contexts (e.g. disease vs. control conditions). 
 The network is inferred by building modified AdaBoost ensembles of differential trees.
 
