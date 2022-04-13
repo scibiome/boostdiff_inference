@@ -1,3 +1,40 @@
+# -------------------------------------------------------------------------------
+# This file is part of BoostDiff.
+#
+# BoostDiff incorporates work that is part of scikit-learn.
+# See the original license notice below.
+# -------------------------------------------------------------------------------
+
+# BSD 3-Clause License
+
+# Copyright (c) 2007-2021 The scikit-learn developers.
+# All rights reserved.
+
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+
+# * Redistributions of source code must retain the above copyright notice, this
+#   list of conditions and the following disclaimer.
+
+# * Redistributions in binary form must reproduce the above copyright notice,
+#   this list of conditions and the following disclaimer in the documentation
+#   and/or other materials provided with the distribution.
+
+# * Neither the name of the copyright holder nor the names of its
+#   contributors may be used to endorse or promote products derived from
+#   this software without specific prior written permission.
+
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 
 from .differential_trees.diff_tree import DiffTree
 from .differential_trees.splitter import Splitter
@@ -118,15 +155,12 @@ class AdaBoostDiffRegressor():
                 
         n_samples_disease = X_disease.shape[0]
         n_samples_control = X_control.shape[0]
-
-        # random_state = np.random.RandomState(iboost)
-        # random_state = check_random_state(self.random_state)
-        # print("random_state", random_state)        
         
         estimator =  DiffTree(self.min_samples_leaf, self.min_samples_split, 
                           n_samples_disease, n_samples_control,
                           self.max_depth, self.max_features)
 
+        # Sample target samples based on sample_weight and control samples uniformly
         bootstrap_idx_dis = np.random.choice(n_samples_disease, n_subsample, replace=True, p=sample_weight)
         bootstrap_idx_con = np.random.choice(n_samples_control, n_subsample, replace=True)
 
@@ -137,13 +171,12 @@ class AdaBoostDiffRegressor():
         y_disease = output_disease[bootstrap_idx_dis]
         y_control = output_control[bootstrap_idx_con]
         
-        
+        # Fit a differential tree
         estimator.build(X_dis, X_con, y_disease, y_control, iboost)
         
         if self.variable_importance == "disease_importance":
             self.feature_importances[iboost, :] = estimator.get_variable_importance_disease_gain()
 
-                
         elif self.variable_importance == "differential_improvement":
             self.feature_importances[iboost, :] = estimator.get_variable_importance_differential_improvement()
 
@@ -169,7 +202,6 @@ class AdaBoostDiffRegressor():
         # Calculate the average loss
         estimator_error = (masked_sample_weight * masked_error_vector).sum()
 
-        
         if estimator_error <= 0:
             # Stop if fit is perfect
             return sample_weight, 1.0, 0.0
@@ -195,15 +227,11 @@ class AdaBoostDiffRegressor():
         self.estimator_count +=1        
         
         y_predict_append = self.predict(X_disease.values).flatten()
-        print("y_predict_append", y_predict_append)
-        print("output_disease", output_disease)
         y_predict_append_con = self.predict(X_control.values).flatten()
             
         error_mean_append = np.absolute(y_predict_append - output_disease)
-
         error_mean_append_con = np.absolute(y_predict_append_con - output_control)
         
-
         self.errors_disease.append(np.mean(error_mean_append))
         self.errors_control.append(np.mean(error_mean_append_con))
                 
@@ -222,7 +250,6 @@ class AdaBoostDiffRegressor():
         # SHould be along the rows
         weight_cdf = stable_cumsum(self.estimator_weights_[sorted_idx], axis=1)
         
-
         median_or_above = weight_cdf >= 0.5 * weight_cdf[:, -1][:, np.newaxis]
         median_idx = median_or_above.argmax(axis=1)
         
@@ -262,7 +289,9 @@ class AdaBoostDiffRegressor():
             
     def fit(self, X_disease, X_control, output_disease, output_control, n_subsample, sample_weight=None):
        
-        """Build a boosted classifier/regressor from the training set (X, y).
+        """
+        Build a boosted classifier/regressor from the training set.
+        
         Parameters
         ----------
         X : {array-like, sparse matrix} of shape (n_samples, n_features)
@@ -294,7 +323,6 @@ class AdaBoostDiffRegressor():
         n_input_genes = X_disease.shape[1]
         
         self.feature_importances = np.zeros([self.n_estimators, n_input_genes], dtype=np.float64)
-
         
         if sample_weight is None:
             sample_weight = np.ones(n_disease)
@@ -309,11 +337,10 @@ class AdaBoostDiffRegressor():
         self.estimator_weights_ = np.zeros(self.n_estimators, dtype=np.float64)
         self.estimator_errors_ = np.ones(self.n_estimators, dtype=np.float64)
 
-
         # Initializion of the random number instance that will be used to
         # generate a seed at each iteration
         random_state = check_random_state(self.random_state)
-        
+        # print("random_state", random_state)
 
         for iboost in range(self.n_estimators):
             
@@ -360,7 +387,8 @@ class AdaBoostDiffRegressor():
             
     def staged_score(self, X, y, sample_weight=None):
         
-        """Return staged scores for X, y.
+        """
+        Return staged scores for X, y.
         This generator method yields the ensemble score after each iteration of
         boosting and therefore allows monitoring, such as to determine the
         score on a test set after each boost.
@@ -386,6 +414,7 @@ class AdaBoostDiffRegressor():
     def calculate_adaboost_importance(self):
         
         """
+        Calculate the tree-based feature importance
         """
                 
         norm = self.estimator_weights_.sum()
@@ -396,7 +425,6 @@ class AdaBoostDiffRegressor():
             
             final_importances[i,:] = self.estimator_weights_[i] * self.feature_importances[i,:]
 
-        
         final_importances = np.sum(final_importances, axis=0)
         final_importances = final_importances / norm
 

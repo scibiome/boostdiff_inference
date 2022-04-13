@@ -125,7 +125,7 @@ class BoostDiff():
             
         except Exception as e:
             
-            print("NAN GENE", gene_names[output_idx])
+            # print("NAN GENE", gene_names[output_idx])
             vi = np.zeros((len(gene_names),))
             difference = np.nan
         
@@ -178,13 +178,8 @@ class BoostDiff():
         n_regulators = len(regulators)
         
         print("Total no. of genes: ", n_genes)
-        if regulators == 'all':
-            print("Regulators: all")
-        else:
-            print("No. of regulators: ", n_regulators)
-    
-        # Adjust to the correct max_depth (depth o root node is -1)             
-        max_depth += 2
+        print("No. of regulators: ", n_regulators)
+
         
         # Collate the variable importances here
         VIM_dis = np.zeros((n_genes, n_genes))
@@ -192,6 +187,7 @@ class BoostDiff():
           
         # The no. of samples used for for inference should be large
         if df_disease.shape[1] > min_samples and df_control.shape[1] > min_samples:
+            
             if n_threads > 1:
                         
                 PROCESSES = n_threads
@@ -235,6 +231,7 @@ class BoostDiff():
                             dict_differences[gene_names[m]] = difference
 
                         except:
+                            
                             VIM_dis[m,:] = np.zeros((n_genes,))            
                             
                             
@@ -302,7 +299,6 @@ class BoostDiff():
             input_idx = [m for m, gene in enumerate(gene_names) if gene in regulators]
 
         # Get the non-ranked list of regulatory links [(target, regulator, score)]
-        # vInter = [(i,j,score) for (i,j),score in np.ndenumerate(VIM_tuple) if i in input_idx and i!=j]
         vInter = [(i,j,score) for (i,j),score in np.ndenumerate(VIM_tuple) if j in input_idx]
 
         # Rank the list according to the weights of the edges        
