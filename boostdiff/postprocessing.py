@@ -5,8 +5,6 @@ import numpy as np
 import os
 import glob
 import networkx as nx
-import matplotlib as mpl
-
 
 
 def plot_histogram(file_diff, file_output=""):
@@ -31,138 +29,59 @@ def plot_histogram(file_diff, file_output=""):
     if file_output:
         plt.savefig(file_output, format="png")
     
-    
         
-def filter_network(output_folder, p=3, n_top_edges=100):
-    
-    '''
+def filter_network(file_raw_net, file_diff, n_top_edges=100, **kwargs):
+
+    """
     Performs the two-step required post-processing
         
     Step 1: Filters the network based on target genes where boosting
             found a more predictive model in the target condition
+            with the most extreme mean difference in prediction error
     Step 2: Re-rank the edges after filtering and consider the first n_top_edges
             as the final differential network
             
-    Inputs:
-        output_folder
-
-    Returns the filtered pandas data frame
-    '''
+    Keyword Args:
+        p (float): the pth percentile of target genes 
+        n_top_targets (int): the n_top_targets target genes 
+    """
     
-    # =========DISEASE condition=========
     # Load the differences file
-    file_diff = glob.glob(os.path.join(output_folder, "disease", "differences*.txt"))
-    df_diff_disease = pd.read_csv(file_diff, sep="\t")
-    df_diff_disease.columns = ["gene","error_diff"]    
+    df_diff = pd.read_csv(file_diff, sep="\t", header=None)
+    df_diff.columns = ["gene","error_diff"]    
     
-    # Load the raw unfiltered network
-    file_raw_output = glob.glob(os.path.join(output_folder, "disease", "boostdiff_network*.txt"))
-    df_net_disease = pd.read_csv(file_raw_output, sep="\t", header=None)
-    df_net_disease.columns = ["target","regulator","weight"]
+    df_net = pd.read_csv(file_raw_net, sep="\t", header=None)
+    df_net.columns = ["target","regulator","weight"]
     
-    # =========CONTROL condition=========
-    # Load the differences file
-    file_diff_control = glob.glob(os.path.join(output_folder, "control", "differences*.txt"))
-    df_diff_control = pd.read_csv(file_diff_control, sep="\t")
-    df_diff_control.columns = ["gene","error_diff"]    
-    
-    # Load the raw unfiltered network
-    file_raw_output_control = glob.glob(os.path.join(output_folder, "control", "boostdiff_network*.txt"))
-    df_net_control = pd.read_csv(file_raw_output_control, sep="\t", header=None)
-    df_net_control.columns = ["target","regulator","weight"]
-
-    # Determine the threshold based on percentile
-    threshold1 = np.percentile(np.asarray(df_diff_disease["error_diff"]), p)
-    threshold2 = np.percentile(np.asarray(df_diff_control["error_diff"]), p)
-    print("Identifying thresholds based on {}th percentile".format(p))
-    
-    df1 = df_diff_disease[df_diff_disease.error_diff < threshold1]
-    list_genes_disease = list(df1.gene)
-    df2 = df_diff_control[df_diff_control.error_diff < threshold2]
-    list_genes_control = list(df2.gene)
-    print("No of target genes in disease condition satisfying threshold: ", len(list_genes_disease))
-    print("No of target genes in control condition satisfying threshold: ", len(list_genes_control))
+    # Identify filtering method
+    if "p" in kwargs:
         
-    df_filtered_dis = df_net_disease[df_net_disease.target.isin(list_genes_disease)]
-    df_filtered_dis = df_filtered_dis.sort_values(by=["weight"], ascending = False)
-    df_filtered_con = df_net_control[df_net_control.target.isin(list_genes_control)]
-    df_filtered_con = df_filtered_con.sort_values(by=["weight"], ascending = False)
-    print("Re-ranking edges after filtering...")
-    print("No of edges in the filtered network (disease as target condition): ", df_filtered_dis.shape[0])
-    print("No of edges in the filtered network (control as target condition): ", df_filtered_con.shape[0])
-
-    df_filtered_dis = df_filtered_dis.head(n_top_edges)
-    df_filtered_con = df_filtered_con.head(n_top_edges)
+        p = kwargs.get("p", 3)
+        print("Identifying thresholds based on {}th percentile".format(p))
     
-    df_filtered_dis["target_condition"] = "disease"
-    df_filtered_con["target_condition"] = "control"
+        # Determine the threshold based on percentile
+        thresh = np.percentile(np.asarray(df_diff["error_diff"]), p)
+        top_target_genes = list(df_diff[df_diff.error_diff < thresh].gene)
         
-    return pd.concat([df_filtered_dis, df_filtered_con])
-
-
-def filter_network_topn(output_folder, n_top_diff=100, n_top_edges=100):
+        print("No of target genes in disease condition satisfying threshold: ", len(top_target_genes))
     
-    '''
-    Performs the two-step required post-processing
+    elif "n_top_targets" in kwargs:
         
-    Step 1: Filters the network based on target genes where boosting
-            found a more predictive model in the target condition
-    Step 2: Re-rank the edges after filtering and consider the first n_top_edges
-            as the final differential network
-            
-    Inputs:
-        output_folder
-
-    Returns the filtered pandas data frame
-    '''
-    
-    # =========DISEASE condition=========
-    # Load the differences file
-    file_diff = glob.glob(os.path.join(output_folder, "disease", "differences*.txt"))
-    df_diff_disease = pd.read_csv(file_diff, sep="\t")
-    df_diff_disease.columns = ["gene","error_diff"]    
-    
-    # Load the raw unfiltered network
-    file_raw_output = glob.glob(os.path.join(output_folder, "disease", "boostdiff_network*.txt"))
-    df_net_disease = pd.read_csv(file_raw_output, sep="\t", header=None)
-    df_net_disease.columns = ["target","regulator","weight"]
-    
-    # =========CONTROL condition=========
-    # Load the differences file
-    file_diff_control = glob.glob(os.path.join(output_folder, "control", "differences*.txt"))
-    df_diff_control = pd.read_csv(file_diff_control, sep="\t")
-    df_diff_control.columns = ["gene","error_diff"]    
-    
-    # Load the raw unfiltered network
-    file_raw_output_control = glob.glob(os.path.join(output_folder, "control", "boostdiff_network*.txt"))
-    df_net_control = pd.read_csv(file_raw_output_control, sep="\t", header=None)
-    df_net_control.columns = ["target","regulator","weight"]
-
-    # Get top edges based on difference in prediction error
-    print("Getting the top {} target genes...".format(n_top_diff))
-    df_diff_disease = df_diff_disease.sort_values(by=['error_diff'], ascending=True)
-    list_genes_disease = list(df_diff_disease.head(n_top_diff)["gene"])
-    
-    df_diff_control = df_diff_control.sort_values(by=['error_diff'], ascending=True)
-    list_genes_control = list(df_diff_control.head(n_top_diff)["gene"])
-
-
-    df_filtered_dis = df_net_disease[df_net_disease.target.isin(list_genes_disease)]
-    df_filtered_dis = df_filtered_dis.sort_values(by=["weight"], ascending = False)
-    df_filtered_con = df_net_control[df_net_control.target.isin(list_genes_control)]
-    df_filtered_con = df_filtered_con.sort_values(by=["weight"], ascending = False)
-    print("Re-ranking edges after filtering...")
-    print("No of edges in the filtered network (disease as target condition): ", df_filtered_dis.shape[0])
-    print("No of edges in the filtered network (control as target condition): ", df_filtered_con.shape[0])
-
-    df_filtered_dis = df_filtered_dis.head(n_top_edges)
-    df_filtered_con = df_filtered_con.head(n_top_edges)
-    
-    df_filtered_dis["target_condition"] = "disease"
-    df_filtered_con["target_condition"] = "control"
+        n_top_targets = kwargs.get("n_top_targets", 10)
         
-    return pd.concat([df_filtered_dis, df_filtered_con])
-        
+        # Get top edges based on difference in prediction error
+        print("Getting the top {} target genes...".format(n_top_targets))
+        df_diff = df_diff.sort_values(by=['error_diff'], ascending=True)
+        top_target_genes = list(df_diff.head(n_top_targets)["gene"])
+    
+    # Sort and get the top edges
+    print("Extracting the top {} edges...".format(n_top_edges))
+    df_filt = df_net[df_net.target.isin(top_target_genes)]
+    df_filt = df_filt.sort_values(by=["weight"], ascending = False)
+    df_filt = df_filt.head(n_top_edges)
+    
+    return df_filt
+
 
 def visualize_network(df_filtered, n_largest_components = 5, output_folder="", keyword=""):
     

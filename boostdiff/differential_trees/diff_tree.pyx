@@ -105,9 +105,7 @@ cdef class DiffTree:
         
         self.n_outputs = 1
         self.max_n_classes = 1
-        
-        # self.splitter = splitter
-        
+                
         cdef Node dummy;
         NODE_DTYPE = np.asarray(<Node[:1]>(&dummy)).dtype
 
@@ -133,16 +131,10 @@ cdef class DiffTree:
         
         cdef np.ndarray[np.float64_t, ndim=1] importances_disease
         importances_disease = np.zeros((self.n_features,))
-        # print()
-        # print("variable importance")
-        # print("self.node_count", self.node_count)
+        
         while i_node != self.node_count:
             
             node = self.nodes[i_node]
-            # print("i_node", i_node)
-            # print("node", node.feature, node.differential_improvement)
-            # print()
-            # print("node", node)
 
             if node.feature != _TREE_UNDEFINED:
                 
@@ -151,15 +143,11 @@ cdef class DiffTree:
                 
                 fraction = <DOUBLE_t>(<DOUBLE_t>node.n_node_samples_dis / <DOUBLE_t>self.n_samples_disease)
                 node_imp_temp = <DOUBLE_t>(node.original_impurity_disease -<DOUBLE_t>(left.original_impurity_disease*(left.n_node_samples_dis/node.n_node_samples_dis)) - <DOUBLE_t>(right.original_impurity_disease*(right.n_node_samples_dis/node.n_node_samples_dis)))
-                # with gil:
-                # print("node.original_impurity_disease", node.original_impurity_disease)
-                # print("node_imp_temp", node_imp_temp)
-                # print("importances_disease[node.feature]", importances_disease[node.feature])
+
                 importances_disease[node.feature] += <DOUBLE_t>(fraction*node_imp_temp)
 
             i_node += 1
            
-        # print("importances_disease", importances_disease)
         return importances_disease
             
     
@@ -181,7 +169,6 @@ cdef class DiffTree:
             
             if node.feature != TREE_UNDEFINED:
                 
-                # importances[node.feature] += <DOUBLE_t>fabs(node.differential_improvement)
                 importances[node.feature] += <DOUBLE_t>node.differential_improvement
             i_node += 1
             
@@ -197,7 +184,6 @@ cdef class DiffTree:
         cdef SIZE_t i_node = 0
         
         cdef SIZE_t n_internals = <SIZE_t>(self.node_count - 1)/2
-        # print("n_internals", n_internals)
         cdef SIZE_t split_counter = 0
         
         cdef np.ndarray[SIZE_t, ndim=1] selected_features
@@ -208,8 +194,6 @@ cdef class DiffTree:
             node = self.nodes[i_node]
             
             if node.feature != TREE_UNDEFINED:
-                
-                # importances[node.feature] += <DOUBLE_t>fabs(node.differential_improvement)
                 selected_features[split_counter] = node.feature
                 split_counter += 1
             i_node += 1
@@ -314,10 +298,7 @@ cdef class DiffTree:
         
         # Parameters
         # print("======TREE=======")
-        # print("random_state", random_state)
         cdef Splitter splitter = Splitter(random_state, self.max_features)
-        # self.splitter = splitter
-        # cdef Splitter splitter = self.splitter
         
         cdef SIZE_t max_depth = self.max_depth
         cdef SIZE_t min_samples_leaf = self.min_samples_leaf
@@ -419,14 +400,7 @@ cdef class DiffTree:
                     
                     # Added for splitter_limit
                     splitter.node_split(start_d, end_d, start_c, end_c, original_impurity_disease, original_impurity_control, &split)
-                    # if n_stage <= 5:
-                        
-                    #     splitter.node_split(start_d, end_d, start_c, end_c, original_impurity_disease, original_impurity_control, &split, features_bowl)
-                        
-                    # else:
-                        
-                    #     splitter.node_split(start_d, end_d, start_c, end_c, original_impurity_disease, original_impurity_control, &split, features_bowl)
-                    
+
                 if split.feature == -2:
                     
                     is_leaf = 1
