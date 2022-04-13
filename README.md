@@ -80,9 +80,9 @@ Sample processing for the run where disease condition was used as the target con
 import boostdiff.postprocessing as pp
 
 # Specify the output file containing the mean difference in prediction error after running the BoostDiff algorithm
-file_diff = "/path/to/output/disease/differences.txt"
+file_diff = "/path/to/output/disease/differences_test.txt"
 # Specify the output file containing the raw network output after running the BoostDiff algorithm
-file_net = "/path/to/output/disease/boostdiff_network.txt"
+file_net = "/path/to/output/disease/boostdiff_network_test.txt"
 
 # Specify the output file for the histogram plot
 file_histogram = "/path/to/output/disease/histogram_disease.png"
