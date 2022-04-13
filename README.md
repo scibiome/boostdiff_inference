@@ -5,7 +5,7 @@ BoostDiff (Boosted Differential Trees) - Tree-based Inference of Differential Ne
 ## General info
 BoostDiff is a tree-based method for inferring differential networks from large-scale transcriptomics data 
 by simultaneously comparing gene expression  from two biological conditions (e.g. disease vs. control conditions). 
-The network is inferred by building modified AdaBoost ensembles of differential trees as base learners. BoostDiff modifies regression trees to use differential variance reduction (DVI) as the novel splitting criterion. BoostDiff builds on GENIE3 and scikit-learn implementations.
+The network is inferred by building modified AdaBoost ensembles of differential trees as base learners. BoostDiff modifies regression trees to use differential variance reduction (DVI) as the novel splitting criterion. 
 
 ## Installation
 
@@ -96,7 +96,7 @@ pp.plot_histogram(file_diff, file_histogram)
 
 # Filter the raw output based on a user-specificed percentile (or threshold)
 # Filters for the threshold identified based on the 3rd percentile.
-df_filtered = pp.filter_network(file_net, file_diff, p=3)
+df_filtered = pp.filter_network(file_net, file_diff, p=3, n_top_edges=100)
 
 # Save the final differential network to file
 file_output = /path/to/output/filtered_network_disease.txt
