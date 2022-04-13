@@ -59,7 +59,7 @@ if sys.version_info[0] == 2:
 # ext_modules=cythonize(["differential_trees/*.pyx"]), include_dirs=[numpy.get_include()],
 
 setup(
-    name='boostdiff_inference',
+    name='boostdiff',
     version="1.0",
     description='Boosted differential trees algorithm',
     author='Gihanna Galindez',
@@ -73,7 +73,7 @@ setup(
     ext_modules=ext_modules,
     include_dirs=[numpy.get_include()],
     
-    license="MIT",
+    license="GPLv3",
     classifiers=[
             "Programming Language :: Python :: 3",
             "Programming Language :: Python :: 3.7",
