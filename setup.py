@@ -18,27 +18,8 @@ from Cython.Build import cythonize
 import os.path
 
 ext = '.pyx' if USE_CYTHON else '.c'
-# ext_modules = []
-# cmdclass = {}
-
-# def no_cythonize(extensions, **_ignore):
-#     for extension in extensions:
-#         sources = []
-#         for sfile in extension.sources:
-#             path, ext = os.path.splitext(sfile)
-#             if ext in ('.pyx', '.py'):
-#                 if extension.language == 'c++':
-#                     ext = '.cpp'
-#                 else:
-#                     ext = '.c'
-#                 sfile = path + ext
-#             sources.append(sfile)
-#         extension.sources[:] = sources
-#     return extensions
 
 cmdclass = { }
-# ext_modules = [ ]
-# cmdclass.update({ 'build_ext': build_ext })
 
 if USE_CYTHON:
     ext_modules = [Extension("boostdiff.differential_trees.arandom", ["boostdiff/differential_trees/arandom.pyx"]),
@@ -56,11 +37,9 @@ else:
 if sys.version_info[0] == 2:
     raise Exception('Python 2.x is not supported')
 
-# ext_modules=cythonize(["differential_trees/*.pyx"]), include_dirs=[numpy.get_include()],
-
 setup(
     name='boostdiff',
-    version="1.0",
+    version="0.0.1",
     description='Boosted differential trees algorithm',
     author='Gihanna Galindez',
     author_email='gihanna.galindez@plri.de',
@@ -85,6 +64,8 @@ setup(
           'numpy',
           'pandas',
           'matplotlib',
+          'cython',
+          'networkx',
       ],
     keywords='differential network inference',
 )
