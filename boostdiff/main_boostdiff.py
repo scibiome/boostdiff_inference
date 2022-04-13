@@ -175,11 +175,13 @@ class BoostDiff():
         '''
 
         n_genes = len(gene_names)
-        n_regulators = len(regulators)
         
         print("Total no. of genes: ", n_genes)
-        print("No. of regulators: ", n_regulators)
-
+        
+        if regulators == "all":
+            print("Using all other genes as regulators.")
+        else:
+            print("No. of regulators: ", len(regulators))
         
         # Collate the variable importances here
         VIM_dis = np.zeros((n_genes, n_genes))
@@ -306,7 +308,7 @@ class BoostDiff():
         nInter = len(vInter_sort)
         
         # Write to output file
-        filename_out = os.path.join(output_folder, "modified_adaboost_{}.txt".format(keyword))
+        filename_out = os.path.join(output_folder, "boostdiff_network_{}.txt".format(keyword))
         
         with open(filename_out, 'w') as f:
     
