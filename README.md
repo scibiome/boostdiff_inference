@@ -11,9 +11,10 @@ The network is inferred by building modified AdaBoost ensembles of differential 
 
 To install the package from git:
 
-`git clone https://github.com/gihannagalindez/boostdiff_inference/.git  && cd boostdiff_inference`
-
-`pip install .`
+```
+git clone https://github.com/gihannagalindez/boostdiff_inference/.git  && cd boostdiff_inference
+pip install .
+```
 
 
 ## Data input
@@ -58,8 +59,8 @@ keyword = "test"
 n_processes = 2
 
 model = BoostDiff()
-model.run(file_disease, file_control, output_folder, n_processes,\
-          n_estimators, n_features, n_subsamples, keyword=keyword)
+model.run(file_disease, file_control, output_folder, n_estimators, \
+          n_features, n_subsamples, keyword=keyword, n_processes=n_processes)
 
 ```
 
