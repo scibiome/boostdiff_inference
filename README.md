@@ -65,7 +65,7 @@ model.run(file_disease, file_control, output_folder, n_processes,\
 
 BoostDiff will output two txt files and a folder containing the plots for the training progression for the modified AdaBoost models.
 <br />
-<br /> Note that BoostDiff is run twice:
+<br /> Note that BoostDiff runs the algorithm twice:
 <br /> Run 1: The disease condition will be used as the target condition (with control condition as baseline). Results will be generated in the subfolder "disease".
 <br /> Run 2: The control/healthy condition will be used as the target condition (with disease condition as baseline).  Results will be generated in the subfolder "control".
 <br /> <br /> In each subfolder, the first txt file shows the data for the mean difference in prediction error between the disease and control samples after training the boosted differential trees. The second txt file contains the raw output network.
