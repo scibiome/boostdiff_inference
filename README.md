@@ -5,7 +5,7 @@ BoostDiff (Boosted Differential Trees) - Tree-based Inference of Differential Ne
 ## General info
 BoostDiff is a tree-based method for inferring differential networks from large-scale transcriptomics data 
 by simultaneously comparing gene expression  from two biological conditions (e.g. disease vs. control conditions). 
-The network is inferred by building modified AdaBoost ensembles of differential trees as base learners. BoostDiff modifies regression trees to use differential variance reduction (DVI) as the novel splitting criterion. 
+The network is inferred by building modified AdaBoost ensembles of differential trees as base learners. BoostDiff modifies regression trees to use differential variance improvement (DVI) as the novel splitting criterion. 
 
 ## Installation
 
