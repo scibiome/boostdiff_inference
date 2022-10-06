@@ -16,7 +16,7 @@ conda create --name bdenv python=3.7
 conda activate bdenv
 conda install numpy pandas networkx pandas matplotlib cython
 
-git clone https://github.com/gihannagalindez/boostdiff_inference/.git  && cd boostdiff_inference
+git clone https://github.com/gihannagalindez/boostdiff_inference.git  && cd boostdiff_inference
 pip install .
 ```
 
