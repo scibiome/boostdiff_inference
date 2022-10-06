@@ -84,25 +84,37 @@ Sample processing for the run where disease condition was used as the target con
 ```python
 import boostdiff.postprocessing as pp
 
-# Specify the output file containing the mean difference in prediction error after running the BoostDiff algorithm
-file_diff = "/path/to/output/disease/differences_test.txt"
+# Specify the output files containing the mean difference in prediction error after running the BoostDiff algorithm
+file_diff_dis = "/path/to/output/disease/differences_test.txt"
+file_diff_con = "/path/to/output/control/differences_test.txt"
+
 # Specify the output file containing the raw network output after running the BoostDiff algorithm
-file_net = "/path/to/output/disease/boostdiff_network_test.txt"
+file_net_dis = "/path/to/output/disease/boostdiff_network_test.txt"
+file_net_con = "/path/to/output/control/boostdiff_network_test.txt"
 
-# Specify the output file for the histogram plot
-file_histogram = "/path/to/output/disease/histogram_disease.png"
-# Plot the histogram
-pp.plot_histogram(file_diff, file_histogram)
+# Filter the raw output based on the no. of top targets in the differences files
+# Then the top 50 edges for the run where the disease condition is the target condition
+# Also the top 50 edges for the run where the control condition is the target condition
+df_dis = pp.filter_network(file_net_dis, file_diff_dis, n_top_targets=10, n_top_edges=100)
+df_con = pp.filter_network(file_disease, file_diff_dis, n_top_targets=10, n_top_edges=50)
 
-# Filter the raw output based on a user-specificed percentile (or threshold)
-# Filters for the threshold identified based on the 3rd percentile.
-df_filtered = pp.filter_network(file_net, file_diff, p=3, n_top_edges=100)
+# Example for real, large-scale datasets: filtering based on 3rd percentile with the p parameter 
+# df_filtered = pp.filter_network(file_net, file_diff, p=3, n_top_edges=100)
+
+# For plotting the differential network
+# Colorize by condition
+df_both = pp.colorize_by_condition(df_dis, df_con)
+# Generate and save the plot
+file_grn = "/path/to/output/diff_grn.png"
+pp.plot_grn(df_both, layout="graphviz_layout", show_conflicting=True, filename=file_grn)
+
 
 # Save the final differential network to file
-file_output = /path/to/output/filtered_network_disease.txt
+file_output = "/path/to/output/filtered_network_disease.txt"
 df_filtered.to_csv(file_output, sep="\t")
 ```
-
+Here is a sample differential network:
+![diff_grn](data/sample_output/diff_grn.png)
 ##  References
 
 [1] Pedregosa, F., et al. (2011). Scikit-learn: Machine learning in Python. the Journal of machine Learning research, 12, 2825-2830.

@@ -83,36 +83,115 @@ def filter_network(file_raw_net, file_diff, n_top_edges=100, **kwargs):
     return df_filt
 
 
-def visualize_network(df_filtered, n_largest_components = 5, output_folder="", keyword=""):
-    
-    '''
-    Visualize the largest subnetworks of the final differential network
-    Saves file to default png file to the output folder
-    '''
-    
-    G = nx.from_pandas_edgelist(df_filtered, 'regulator', 'target', ['weight'], create_using=nx.DiGraph())
-    pos = nx.spring_layout(G)    
-    
-    all_components = [c for c in sorted(nx.connected_components(G.to_undirected()), key=len, reverse=True)]
-    
-    count = 1
-    for comp in all_components[:n_largest_components]:
-    
-        G_sub = G.subgraph(comp)
-        d_sub = dict(G_sub.degree)
-        
-        pos = nx.shell_layout(G_sub)
-        fig, ax = plt.subplots(figsize=(9,9))
-    
-        ax.set_axis_off()
-        nx.draw_networkx_edges(G_sub, pos, ax=ax, arrowstyle="-|>", arrowsize=20, min_source_margin=35, min_target_margin=38)
-        nx.draw_networkx_nodes(G_sub, pos, node_color="lightblue", 
-                               node_size=[2100 for v in d_sub.values()], ax=ax)
-        nx.draw_networkx_labels(G_sub, pos, font_size=21,font_color='black', ax=ax)
-        
-        file_output = os.path.join(output_folder, "subnetwork_{}.svg".format(count))
-        print("file_output", file_output)
-        plt.savefig(file_output, format="svg")
-        # plt.show()
-        
-        count+=1
+def colorize_by_condition(df_dis, df_con):
+    """
+    Parameters
+    ----------
+    df_dis:
+    df_con
+    Input dfs should already be filtered
+    Should have columns ["target","regulator"]
+
+    Returns
+    -------
+    The colorized df
+    Edges that are stronger in disease: darkred
+    Edges that are stronger in control: darkgreen
+    Edges that are conflicting (if any): black
+    """
+
+    df_dis = df_dis[["target", "regulator"]]
+    df_dis.loc[:, "condition"] = "disease"
+
+    df_con = df_con[["target", "regulator"]]
+    df_con.loc[:, "condition"] = "control"
+
+    df_both = pd.concat([df_dis, df_con])
+    df_both = df_both.drop_duplicates(['target', 'regulator'])
+
+    # Find and mark conflicting edges (should be colored gray)
+    df_conflict = pd.merge(df_dis, df_con, how='inner', on=['target', 'regulator'])
+    df_conflict = df_conflict[['target','regulator']]
+    df_conflict.loc[:, "condition"] = "both"
+    print("No. of conflicting edges:", df_conflict.shape[0])
+
+    df_final = pd.concat([df_both, df_conflict])
+
+    # Add color using a mapping
+    color_map = {"disease": "darkred", "control": "darkgreen", "both": "black"}
+    df_final["color"] = df_final["condition"].map(color_map)
+
+    return df_final
+
+
+def plot_grn(df_preprocessed, layout="graphviz_layout", show_conflicting=True,
+             filename=None, highlight_genes=None):
+
+    """
+    Parameters
+    ----------
+    df_preprocessed: the output of colorized_by_condition
+    layout: 'random_layout', 'graphviz_layout'
+    show_conflicting: whether to show conflicting edges between
+                    the two runs
+    filename: filename of the differential network image
+    highlight_genes: list of genes to be highlighted, will be colored blue
+
+    Returns
+    -------
+    Plots the directed graph with networkx
+    Image will be saved as a png file
+    """
+
+    from matplotlib.legend_handler import HandlerPatch
+    import matplotlib.patches as mpatches
+
+    G = nx.from_pandas_edgelist(df_preprocessed, 'regulator', 'target', ['color'], create_using=nx.DiGraph())
+
+    edges = G.edges()
+    colors = [G[u][v]['color'] for u, v in edges]
+
+    if highlight_genes:
+        node_colors = ['lightblue' if node in highlight_genes else 'lightgray' for node in G.nodes()]
+    fig, ax = plt.subplots(figsize=(20, 20))
+
+    # Draw the differential GRN
+    if layout == "random_layout":
+        pos = nx.random_layout(G)
+
+    elif layout == 'graphviz_layout':
+        # https://networkx.org/documentation/stable/reference/generated/networkx.drawing.nx_pydot.graphviz_layout.html
+        pos = graphviz_layout(G, prog='sfdp')
+
+    if highlight_genes:
+        nx.draw_networkx_nodes(G, pos, node_size=1800, ax=ax, node_color=node_colors)
+    else:
+        nx.draw_networkx_nodes(G, pos, node_size=1800, ax=ax, node_color='lightgray')
+    nx.draw_networkx_labels(G, pos, ax=ax, font_size=11)
+    nx.draw_networkx_edges(G, pos, edge_color=colors, arrows=True, arrowsize=20, width=2, min_target_margin=25, ax=ax)
+
+    # Add custom legend
+    # https://matplotlib.org/1.3.1/examples/pylab_examples/legend_demo_custom_handler.html
+    # Citation: https://stackoverflow.com/questions/22348229/matplotlib-legend-for-an-arrow
+    def make_legend_arrow(legend, orig_handle,
+                          xdescent, ydescent,
+                          width, height, fontsize):
+        p = mpatches.FancyArrow(0, 0.5 * height, width, 0, length_includes_head=True, head_width=0.75 * height)
+        return p
+
+    arrow1 = plt.arrow(0, 0, 0, 0, color="darkred", head_width=0)
+    arrow2 = plt.arrow(0, 0, 0, 0, color="darkgreen", head_width=0)
+
+    if show_conflicting:
+        arrow3 = plt.arrow(0, 0, 0, 0, color="black", head_width=0)
+        ax.legend([arrow1, arrow2, arrow3], ['Stronger in disease', 'Stronger in control', 'Conflicting'],
+                  handler_map={mpatches.FancyArrow: HandlerPatch(patch_func=make_legend_arrow), }, loc="upper right",
+                  fontsize=14)
+    else:
+        ax.legend([arrow1, arrow2], ['Stronger in disease', 'Stronger in control'],
+                  handler_map={mpatches.FancyArrow: HandlerPatch(patch_func=make_legend_arrow), }, loc="upper right",
+                  fontsize=14)
+
+    if filename:
+        plt.savefig(filename, bbox_inches="tight", format="png")
+    plt.show()
