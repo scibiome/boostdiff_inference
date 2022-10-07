@@ -96,7 +96,7 @@ file_net_con = "/path/to/output/control/boostdiff_network_test.txt"
 # Then the top 50 edges for the run where the disease condition is the target condition
 # Also the top 50 edges for the run where the control condition is the target condition
 df_dis = pp.filter_network(file_net_dis, file_diff_dis, n_top_targets=10, n_top_edges=50)
-df_con = pp.filter_network(file_disease, file_diff_dis, n_top_targets=10, n_top_edges=50)
+df_con = pp.filter_network(file_net_con, file_diff_con, n_top_targets=10, n_top_edges=50)
 
 # Example for real, large-scale datasets: filtering based on 3rd percentile with the p parameter 
 # df_filtered = pp.filter_network(file_net, file_diff, p=3, n_top_edges=100)
