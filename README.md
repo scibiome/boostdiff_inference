@@ -115,6 +115,11 @@ df_filtered.to_csv(file_output, sep="\t")
 ```
 Here is a sample differential network:
 ![diff_grn](data/sample_output/diff_grn.png)
+
+## Citation 
+
+Galindez, G. G., List, M., Baumbach, J., Blumenthal, D. B., & Kacprowski, T. (2022). Inference of differential gene regulatory networks from gene expression data using boosted differential trees. bioRxiv. doi: https://doi.org/10.1101/2022.09.26.509450.
+
 ##  References
 
 [1] Pedregosa, F., et al. (2011). Scikit-learn: Machine learning in Python. the Journal of machine Learning research, 12, 2825-2830.
