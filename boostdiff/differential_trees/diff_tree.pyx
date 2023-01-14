@@ -1,41 +1,3 @@
-# -------------------------------------------------------------------------------
-# This file is part of BoostDiff.
-#
-# BoostDiff incorporates work that is part of scikit-learn.
-# See the original license notice below.
-# -------------------------------------------------------------------------------
-
-# BSD 3-Clause License
-
-# Copyright (c) 2007-2021 The scikit-learn developers.
-# All rights reserved.
-
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-
-# * Redistributions of source code must retain the above copyright notice, this
-#   list of conditions and the following disclaimer.
-
-# * Redistributions in binary form must reproduce the above copyright notice,
-#   this list of conditions and the following disclaimer in the documentation
-#   and/or other materials provided with the distribution.
-
-# * Neither the name of the copyright holder nor the names of its
-#   contributors may be used to endorse or promote products derived from
-#   this software without specific prior written permission.
-
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-# DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-
 # cython: cdivision=True
 # cython: boundscheck=False
 # cython: wraparound=False
@@ -105,7 +67,9 @@ cdef class DiffTree:
         
         self.n_outputs = 1
         self.max_n_classes = 1
-                
+        
+        # self.splitter = splitter
+        
         cdef Node dummy;
         NODE_DTYPE = np.asarray(<Node[:1]>(&dummy)).dtype
 
@@ -131,10 +95,16 @@ cdef class DiffTree:
         
         cdef np.ndarray[np.float64_t, ndim=1] importances_disease
         importances_disease = np.zeros((self.n_features,))
-        
+        # print()
+        # print("variable importance")
+        # print("self.node_count", self.node_count)
         while i_node != self.node_count:
             
             node = self.nodes[i_node]
+            # print("i_node", i_node)
+            # print("node", node.feature, node.differential_improvement)
+            # print()
+            # print("node", node)
 
             if node.feature != _TREE_UNDEFINED:
                 
@@ -143,11 +113,15 @@ cdef class DiffTree:
                 
                 fraction = <DOUBLE_t>(<DOUBLE_t>node.n_node_samples_dis / <DOUBLE_t>self.n_samples_disease)
                 node_imp_temp = <DOUBLE_t>(node.original_impurity_disease -<DOUBLE_t>(left.original_impurity_disease*(left.n_node_samples_dis/node.n_node_samples_dis)) - <DOUBLE_t>(right.original_impurity_disease*(right.n_node_samples_dis/node.n_node_samples_dis)))
-
+                # with gil:
+                # print("node.original_impurity_disease", node.original_impurity_disease)
+                # print("node_imp_temp", node_imp_temp)
+                # print("importances_disease[node.feature]", importances_disease[node.feature])
                 importances_disease[node.feature] += <DOUBLE_t>(fraction*node_imp_temp)
 
             i_node += 1
            
+        # print("importances_disease", importances_disease)
         return importances_disease
             
     
@@ -169,6 +143,7 @@ cdef class DiffTree:
             
             if node.feature != TREE_UNDEFINED:
                 
+                # importances[node.feature] += <DOUBLE_t>fabs(node.differential_improvement)
                 importances[node.feature] += <DOUBLE_t>node.differential_improvement
             i_node += 1
             
@@ -184,6 +159,7 @@ cdef class DiffTree:
         cdef SIZE_t i_node = 0
         
         cdef SIZE_t n_internals = <SIZE_t>(self.node_count - 1)/2
+        # print("n_internals", n_internals)
         cdef SIZE_t split_counter = 0
         
         cdef np.ndarray[SIZE_t, ndim=1] selected_features
@@ -194,6 +170,8 @@ cdef class DiffTree:
             node = self.nodes[i_node]
             
             if node.feature != TREE_UNDEFINED:
+                
+                # importances[node.feature] += <DOUBLE_t>fabs(node.differential_improvement)
                 selected_features[split_counter] = node.feature
                 split_counter += 1
             i_node += 1
@@ -298,7 +276,10 @@ cdef class DiffTree:
         
         # Parameters
         # print("======TREE=======")
+        # print("random_state", random_state)
         cdef Splitter splitter = Splitter(random_state, self.max_features)
+        # self.splitter = splitter
+        # cdef Splitter splitter = self.splitter
         
         cdef SIZE_t max_depth = self.max_depth
         cdef SIZE_t min_samples_leaf = self.min_samples_leaf
@@ -381,14 +362,16 @@ cdef class DiffTree:
                 n_node_samples_disease = end_d - start_d
                 n_node_samples_control = end_c - start_c
 
+
+				
                 # Terminal node
                 # Before splitting current node                
                 is_leaf = (depth >= self.max_depth or
-                           splitter.n_node_samples_disease < 2 * self.min_samples_split or
+                           splitter.n_node_samples_disease < self.min_samples_split or
                            splitter.n_node_samples_disease  < 2 * self.min_samples_leaf or 
                            splitter.n_node_samples_control  < 2 * self.min_samples_leaf or
-                           splitter.n_node_samples_control < 2 *self.min_samples_split)
-            
+                           splitter.n_node_samples_control < self.min_samples_split)
+						   
                 if first:
                     original_impurity_disease = splitter.node_impurity_disease()
                     original_impurity_control = splitter.node_impurity_control()
@@ -400,7 +383,14 @@ cdef class DiffTree:
                     
                     # Added for splitter_limit
                     splitter.node_split(start_d, end_d, start_c, end_c, original_impurity_disease, original_impurity_control, &split)
-
+                    # if n_stage <= 5:
+                        
+                    #     splitter.node_split(start_d, end_d, start_c, end_c, original_impurity_disease, original_impurity_control, &split, features_bowl)
+                        
+                    # else:
+                        
+                    #     splitter.node_split(start_d, end_d, start_c, end_c, original_impurity_disease, original_impurity_control, &split, features_bowl)
+                    
                 if split.feature == -2:
                     
                     is_leaf = 1
