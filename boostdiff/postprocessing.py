@@ -112,10 +112,14 @@ def colorize_by_condition(df_dis, df_con):
     # Find and mark conflicting edges (should be colored gray)
     df_conflict = pd.merge(df_dis, df_con, how='inner', on=['target', 'regulator'])
     df_conflict = df_conflict[['target','regulator']]
-    df_conflict.loc[:, "condition"] = "both"
-    print("No. of conflicting edges:", df_conflict.shape[0])
 
-    df_final = pd.concat([df_both, df_conflict])
+    if df_conflict.empty:
+        df_final = df_both
+    else:
+        df_conflict.loc[:, "condition"] = "both"
+        print("No. of conflicting edges:", df_conflict.shape[0])
+
+        df_final = pd.concat([df_both, df_conflict])
 
     # Add color using a mapping
     color_map = {"disease": "darkred", "control": "darkgreen", "both": "black"}
