@@ -56,7 +56,7 @@ file_disease = "/path/to/boostdiff_inference/data/expr_disease.txt"
 file_control = "/path/to/boostdiff_inference/data/expr_control.txt"
 output_folder = "/path/to/output/"
 
-n_estimators = 100
+n_estimators = 50
 n_features = 50
 n_subsamples = 50
 keyword = "test"
