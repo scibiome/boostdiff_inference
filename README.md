@@ -68,7 +68,7 @@ model.run(file_disease, file_control, output_folder, n_estimators, \
 
 ```
 
-BoostDiff will output two txt files and a folder containing the plots for the training progression for the modified AdaBoost models.
+BoostDiff will output two folder, each with two txt files.
 <br />
 <br /> Note that BoostDiff runs the algorithm twice:
 <br /> Run 1: The disease condition will be used as the target condition (with control condition as baseline). Results will be generated in the subfolder "disease".
