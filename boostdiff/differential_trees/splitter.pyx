@@ -771,8 +771,8 @@ cdef class Splitter:
             # Previous code
             current_feature = features[f_j]
 			
-            with gil:
-                print("current_feature", current_feature)
+            # with gil:
+            #    print("current_feature", current_feature)
             
             # Update no. of visited features
             n_visited_features += 1

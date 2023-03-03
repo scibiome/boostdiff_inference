@@ -21,7 +21,7 @@ class BoostDiff():
     def adaboost_single_gene(self, X_disease, X_control, output_idx, input_idx, gene_names,
                           max_features, min_samples_leaf, min_samples_split, max_depth,
                           n_subsample, learning_rate, loss, n_estimators,
-                          output_folder, normalize, variable_importance):
+                          normalize, variable_importance):
 
 
         '''
@@ -50,7 +50,6 @@ class BoostDiff():
         n_estimators: no. of trees in the AdaBoost ensemble
         n_threads: no. of threads
         keyword: string keyword used for naming the output files
-        output_folder: name of output folder
         normalize: normalization method ('unit_variance','minmax')
         variable_importance: variable importance measure to be used
                 ('disease_importance','differential_improvement')
@@ -106,16 +105,16 @@ class BoostDiff():
             # Difference in mean prediction error
             difference = error_dis_dis - error_dis_con
             
-            output_file = os.path.join(output_folder, "{}_training_progress.png".format(gene_names[output_idx]))
-            fig = plt.figure(figsize=(10,7))
-            plt.plot(range(1, model.estimator_count), model.errors_disease[1:], label = 'disease error')
-            plt.plot(range(1, model.estimator_count), model.errors_control[1:], label='control error')
-            plt.title("AdaBoost training progress \n Gene {}".format(gene_names[output_idx]), fontsize=18)
-            plt.xlabel("No. of boosting iterations", fontsize=20)
-            plt.ylabel("Training error", fontsize=20)
-            plt.legend()
-            plt.savefig(output_file)
-            plt.close(fig)
+            # output_file = os.path.join(output_folder, "{}_training_progress.png".format(gene_names[output_idx]))
+            # fig = plt.figure(figsize=(10,7))
+            # plt.plot(range(1, model.estimator_count), model.errors_disease[1:], label = 'disease error')
+            # plt.plot(range(1, model.estimator_count), model.errors_control[1:], label='control error')
+            # plt.title("AdaBoost training progress \n Gene {}".format(gene_names[output_idx]), fontsize=18)
+            # plt.xlabel("No. of boosting iterations", fontsize=20)
+            # plt.ylabel("Training error", fontsize=20)
+            # plt.legend()
+            # plt.savefig(output_file)
+            # plt.close(fig)
             
             # Compute feature importance
             VIM = model.calculate_adaboost_importance()
@@ -132,8 +131,7 @@ class BoostDiff():
         return (vi, difference) 
         
                               
-    def modified_adaboost(self, df_disease, df_control, gene_names, regulators, 
-                          output_folder, 
+    def modified_adaboost(self, df_disease, df_control, gene_names, regulators,
                           n_estimators, num_features,
                           n_subsamples,
                           min_samples_leaf, min_samples_split, max_depth,
@@ -215,7 +213,7 @@ class BoostDiff():
                             
                         input_data.append([df_disease, df_control, target_gene_idx, input_idx, gene_names, 
                                            num_features, min_samples_leaf, min_samples_split, 
-                                           max_depth, n_subsamples, learning_rate, loss, n_estimators, output_folder, normalize,
+                                           max_depth, n_subsamples, learning_rate, loss, n_estimators, normalize,
                                            variable_importance])
         
                     all_output = [pool.apply_async(self.adaboost_single_gene, input_data_i) for input_data_i in input_data]
@@ -254,7 +252,7 @@ class BoostDiff():
                         
                     output = self.adaboost_single_gene(df_disease, df_control, target_gene_idx, input_idx, gene_names,
                           num_features, min_samples_leaf, min_samples_split, max_depth,
-                          n_subsamples, learning_rate, loss, n_estimators, output_folder, normalize, variable_importance)
+                          n_subsamples, learning_rate, loss, n_estimators, normalize, variable_importance)
 
                     try:
                         VIM_dis[target_gene_idx, :] = output[0]
@@ -326,7 +324,7 @@ class BoostDiff():
             min_samples_leaf=2, min_samples_split=6, max_depth=2,
             min_samples=15,  learning_rate = 1.0, loss = "square", n_processes=1,
             keyword = "", regulators='all', normalize="unit_variance",
-            index = "Gene", variable_importance="disease_importance"):
+            index = "Gene", variable_importance="disease_importance", modes=["disease","control"]):
         
         '''
         Input: tab-separated disease and control files
@@ -338,14 +336,14 @@ class BoostDiff():
 
         output_folder_disease = os.path.join(output_folder, "disease")
         output_folder_control = os.path.join(output_folder, "control")
-        folder_progress_disease = os.path.join(output_folder_disease, "{}_training_progress".format(keyword))
-        folder_progress_control = os.path.join(output_folder_control, "{}_training_progress".format(keyword))
-        
-        if not os.path.exists(folder_progress_disease):
-            os.makedirs(folder_progress_disease)  
-        if not os.path.exists(folder_progress_control):
-            os.makedirs(folder_progress_control)  
-        
+        # folder_progress_disease = os.path.join(output_folder_disease, "{}_training_progress".format(keyword))
+        # folder_progress_control = os.path.join(output_folder_control, "{}_training_progress".format(keyword))
+        #
+        # if not os.path.exists(folder_progress_disease):
+        #     os.makedirs(folder_progress_disease)
+        # if not os.path.exists(folder_progress_control):
+        #     os.makedirs(folder_progress_control)
+        #
         print("==================")
         print("file_disease", file_disease)
         print("file_control", file_control)
@@ -366,34 +364,34 @@ class BoostDiff():
         gene_names = df_disease.T.columns
                 
         start=time.time() 
-        
-        # DISEASE as target condition
-        print("Running disease as target condion")
-        vim_dis, dict_differences_dis = self.modified_adaboost(df_disease, df_control, gene_names, regulators, 
-                      folder_progress_disease, 
-                      n_estimators, n_features,
-                      n_subsamples,
-                      min_samples_leaf, min_samples_split, max_depth, min_samples, 
-                      learning_rate, loss, 
-                      n_processes, keyword, normalize, variable_importance)
-    
-        # Rank edges by variable importance
-        self.write_link_list(vim_dis, gene_names, regulators, output_folder_disease, keyword) 
-        self.write_differences(dict_differences_dis, output_folder_disease, keyword)
-        
-        # CONTROL as target condition
-        print("Running control as target condion")
-        vim_con, dict_differences_con = self.modified_adaboost(df_control, df_disease, gene_names, regulators, 
-                      folder_progress_control, 
-                      n_estimators, n_features,
-                      n_subsamples,
-                      min_samples_leaf, min_samples_split, max_depth, min_samples,
-                      learning_rate, loss, 
-                      n_processes, keyword, normalize, variable_importance)
-    
-        # Rank edges by variable importance
-        self.write_link_list(vim_con, gene_names, regulators, output_folder_control, keyword) 
-        self.write_differences(dict_differences_con, output_folder_control, keyword)
-        
+
+        if "disease" in modes:
+            # DISEASE as target condition
+            print("Running disease as target condition")
+            vim_dis, dict_differences_dis = self.modified_adaboost(df_disease, df_control, gene_names, regulators,
+                          n_estimators, n_features,
+                          n_subsamples,
+                          min_samples_leaf, min_samples_split, max_depth, min_samples,
+                          learning_rate, loss,
+                          n_processes, keyword, normalize, variable_importance)
+
+            # Rank edges by variable importance
+            self.write_link_list(vim_dis, gene_names, regulators, output_folder_disease, keyword)
+            self.write_differences(dict_differences_dis, output_folder_disease, keyword)
+
+        if "control" in modes:
+            # CONTROL as target condition
+            print("Running control as target condition")
+            vim_con, dict_differences_con = self.modified_adaboost(df_control, df_disease, gene_names, regulators,
+                          n_estimators, n_features,
+                          n_subsamples,
+                          min_samples_leaf, min_samples_split, max_depth, min_samples,
+                          learning_rate, loss,
+                          n_processes, keyword, normalize, variable_importance)
+
+            # Rank edges by variable importance
+            self.write_link_list(vim_con, gene_names, regulators, output_folder_control, keyword)
+            self.write_differences(dict_differences_con, output_folder_control, keyword)
+
         end = time.time()
         print("Time elapsed: {} min".format(((end-start)/60))) 
