@@ -38,9 +38,28 @@ Control expression data:
 | ACE2   | 0.084  | 0.147  |0.91 | 
 | APP   | 0.567  | 0.794  | 0.590 | 
 
+## Parameters:
+1. **run**(file_disease, file_control, output_folder, n_estimators, \
+          n_features, n_subsamples, keyword=keyword, n_processes=n_processes)
+
+- `file_disease`: *string*, path to the disease expression data 
+- `file_control`: *string*, path to the control expression data 
+- `output_folder`: *string*, the folder where the output will be generated
+- `n_estimators`: *int*, the no. of trees to be built in the modified AdaBoost ensemble
+- `n_features`: *int*, the no. of regulators (predictor genes/features) to be used
+- `n_subsamples`: *int*, the no. of bootstrapped samples to be used per condition (disease samples and control samples) when building the tree ensemble
+- `min_samples_leaf`: *int (default = 2)*, the minimum no. of samples in a leaf
+- `min_samples_split`: *int (default = 6)*, the minimum no. of samples required to split an internal node
+- `max_depth`: *int (default = 2)*, the maximum depth of a differential tree; max_depth=0 means tree stumps will be built
+- `min_samples`: *int (default = 15)*, the minimum no. of samples required per condition (disease samples and control samples) 
+- `learning_rate`: *float (default = 1.0)*, the minimum no. of samples required per condition (disease samples and control samples) 
+- `loss`: *string (default = "square")*, the loss used for AdaBoost {"square","exponential","linear"}
+- `n_processes` *int (default = 1")*, for parallel computing 
+- `keyword` *string*, keyword used for naming the output files
+- `regulators`: the string 'all' if all genes can be considered potential predictors or a list of gene names to be used as predictors
+- normalize *string or bool*, if False, then no normalization will be performed; default is "unit_variance" normalization
 
 ## Example
-
 
 Import the BoostDiff package:
 
