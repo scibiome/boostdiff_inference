@@ -57,7 +57,7 @@ Control expression data:
 - `n_processes` *int (default = 1")*, for parallel computing 
 - `keyword` *string*, keyword used for naming the output files
 - `regulators`: the string 'all' if all genes can be considered potential predictors or a list of gene names to be used as predictors
-- normalize *string or bool*, if False, then no normalization will be performed; default is "unit_variance" normalization
+- `normalize` *string or bool*:, if False, then no normalization will be performed; default is "unit_variance" normalization
 
 ## Example
 
@@ -134,6 +134,12 @@ df_filtered.to_csv(file_output, sep="\t")
 ```
 Here is a sample differential network:
 ![diff_grn](data/sample_output/diff_grn.png)
+
+## General recommendations and filtering on real datasets
+
+The ideal number of samples per condition as input to BoostDiff would be at least 30 samples each. For real transcriptomics datasets, we recommend to set a relatively low number of base learners: n_estimators=50, so that 50 adaptively boosted differential trees will be built. For filtering, we recommend to start with filtering target genes using p=3 parameter and n_top_edges=250 to 500 per condition (500 to 1000 edges in the final network).
+
+df_filtered = pp.filter_network(file_net, file_diff, p=3, n_top_edges=250)
 
 ## Citation 
 
