@@ -9,12 +9,11 @@ The network is inferred by building modified AdaBoost ensembles of differential 
 
 ## Installation
 
-To install the package from git:
+We create the conda environment from the environment.yml provided and install the package from git:
 
 ```
-conda create --name bdenv python=3.7
+conda create --name bdenv --file environment.yml
 conda activate bdenv
-conda install numpy pandas networkx pandas matplotlib cython
 
 git clone https://github.com/gihannagalindez/boostdiff_inference.git  && cd boostdiff_inference
 pip install .
@@ -67,7 +66,11 @@ Import the BoostDiff package:
 from boostdiff.main_boostdiff import BoostDiff
 ```
 
-### Step 1: Run BoostDiff 
+### Running BoostDiff 
+
+The ideal number of samples per condition as input to BoostDiff would be at least 30 samples each. For real transcriptomics datasets, we recommend to set a relatively low number of base learners: n_estimators=50, so that 50 adaptively boosted differential trees will be built and avoid overfitting. In this example we run BoostDiff on sample simulated data. \\
+
+We also provide a sample script for running the B. subtilis salt stress response data in tutorial > 01_boostdiff_on_bsubt.py. 
 
 ```python
 
@@ -94,52 +97,17 @@ BoostDiff will output two subfolders, each containing two txt files.
 <br /> Run 2: The control/healthy condition will be used as the target condition (with disease condition as baseline).  Results will be generated in the subfolder "control".
 <br /> <br /> In each subfolder, the first txt file shows the data for the mean difference in prediction error between the disease and control samples after training the boosted differential trees. The second txt file contains the raw output network.
 
-###  Step 2: Filtering
+##  Postprocessing: Filtering and Visualization
 
-To obtain the final differential network, the raw network should be filtered for target genes in which BoostDiff found a more predictive model for the target condition. This additional step is crucial and part of the pipeline, as a trained model will not always be more predictive of a target condition. 
+For postprocessing, we will create a different conda environment using the environment_vis.yml:
 
-Sample processing for the run where disease condition was used as the target condition:
-
-```python
-import boostdiff.postprocessing as pp
-
-# Specify the output files containing the mean difference in prediction error after running the BoostDiff algorithm
-file_diff_dis = "/path/to/output/disease/differences_test.txt"
-file_diff_con = "/path/to/output/control/differences_test.txt"
-
-# Specify the output file containing the raw network output after running the BoostDiff algorithm
-file_net_dis = "/path/to/output/disease/boostdiff_network_test.txt"
-file_net_con = "/path/to/output/control/boostdiff_network_test.txt"
-
-# Filter the raw output based on the no. of top targets in the differences files
-# Then the top 50 edges for the run where the disease condition is the target condition
-# Also the top 50 edges for the run where the control condition is the target condition
-df_dis = pp.filter_network(file_net_dis, file_diff_dis, n_top_targets=10, n_top_edges=50)
-df_con = pp.filter_network(file_net_con, file_diff_con, n_top_targets=10, n_top_edges=50)
-
-# Example for real, large-scale datasets: filtering based on 3rd percentile with the p parameter 
-# df_filtered = pp.filter_network(file_net, file_diff, p=3, n_top_edges=100)
-
-# For plotting the differential network
-# Colorize by condition
-df_both = pp.colorize_by_condition(df_dis, df_con)
-# Generate and save the plot
-file_grn = "/path/to/output/diff_grn.png"
-pp.plot_grn(df_both, layout="graphviz_layout", show_conflicting=True, filename=file_grn)
-
-
-# Save the final differential network to file
-file_output = "/path/to/output/filtered_network_disease.txt"
-df_filtered.to_csv(file_output, sep="\t")
 ```
-Here is a sample differential network:
-![diff_grn](data/sample_output/diff_grn.png)
+conda create --name bd_post --file environment_vis.yml
+conda activate bd_post
+```
 
-## General recommendations and filtering on real datasets
+The notebook containing the code for filtering and visualization can be found in tutorial > 02_tutorial_visualization.ipynb. To obtain the final differential network, the raw network should be filtered for target genes in which BoostDiff found a more predictive model for the target condition. This additional step is crucial and part of the pipeline, as a trained model will not always be more predictive of a target condition. 
 
-The ideal number of samples per condition as input to BoostDiff would be at least 30 samples each. For real transcriptomics datasets, we recommend to set a relatively low number of base learners: n_estimators=50, so that 50 adaptively boosted differential trees will be built. For filtering, we recommend to start with filtering target genes using p=3 parameter and n_top_edges=250 to 500 per condition (500 to 1000 edges in the final network).
-
-df_filtered = pp.filter_network(file_net, file_diff, p=3, n_top_edges=250)
 
 ## Citation 
 
