@@ -1,6 +1,0 @@
-pandas
-networkx
-numpy
-matplotlib
-networkx
-cython
