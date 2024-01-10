@@ -14,7 +14,7 @@ We create the conda environment from the environment.yml provided and install th
 ```
 git clone https://github.com/gihannagalindez/boostdiff_inference.git && cd boostdiff_inference
 
-conda create --name bdenv --file environment.yml
+conda env create --name bdenv --file environment.yml
 conda activate bdenv
 
 pip install .
