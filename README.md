@@ -59,9 +59,11 @@ Control expression data:
 - `regulators`: the string 'all' if all genes can be considered potential predictors or a list of gene names to be used as predictors
 - `normalize` *string or bool*:, if False, then no normalization will be performed; default is "unit_variance" normalization
 
-## Datasets
+## Datasets and preprocessing
 
-If you want to analyze datasets that are available on the Gene Expression Omnibus (GEO) database, you can use GEOquery in R. Depending on the study and formatting of the raw data, you might need to map the genes to the desired genes IDs, filter, or preprocess them. Here is an example on how to download the Crohn's disease dataset that was used in the paper:
+All datasets in the manuscript are publicly available. The COVID-19 and Crohn's disease datasets are available in the Gene Expression Omnibus (GEO) database with accession numbers GSE156063 and GSE126124, respectively. The TCGA datasets can be downloaded from [https://xenabrowser.net/](https://xenabrowser.net/datapages/). The *B. subtilis* datasets can be found in GEO with the accession number GSE27219. Scripts for preprocessing the COVID-19, Crohn's disease, and TCGA breast cancer and prostate adenocarcinoma datasets can be found in `tutorial` > `preprocessing`.
+
+If you want to analyze other datasets that are available on the GEO database, you can also use the GEOquery package in R. Depending on the study and format of the raw data, you might need to map the genes to the desired genes IDs, filter, and/or preprocess them to select specific samples to analyze for your study. Here is an example on how to download the Crohn's disease dataset that was used in the paper:
 
 ```R
 library(GEOquery)
@@ -104,7 +106,8 @@ write.table(df_ctrl_crohns, file = file_ctrl_crohns, append = FALSE, quote = FAL
 
 ## Running BoostDiff 
 
-Import the BoostDiff package:
+Note: BoostDiff was tested on linux.
+To import the BoostDiff package:
 
 ```python
 from boostdiff.main_boostdiff import BoostDiff
@@ -112,23 +115,36 @@ from boostdiff.main_boostdiff import BoostDiff
 
 The ideal number of samples per condition as input to BoostDiff would be at least 30 samples each. For real transcriptomics datasets, we recommend to set a relatively low number of base learners, e.g. set `n_estimators=50`, so that 50 adaptively boosted differential trees will be built to avoid overfitting. 
 
-The Crohn's disease dataset is large and will need a high-performance computing cluster to run in reasonable time. So in this example, we run BoostDiff on the smaller sample simulated data provided in `data` > `simulated_data`. We also provide a sample script for running the B. subtilis salt stress response data in `tutorial` > `01_boostdiff_on_bsubt.py`. 
+For the demo, the Crohn's disease dataset is too large and will need a high-performance computing cluster to run. So in this example, we run BoostDiff on the smaller *B. subtilis* salt stress response dataset. The script can be found in `tutorial` > `01_boostdiff_on_bsubt.py`. 
 
 ```python
 
-file_disease = "/path/to/boostdiff_inference/data/expr_disease.txt"
-file_control = "/path/to/boostdiff_inference/data/expr_control.txt"
-output_folder = "/path/to/output/"
 
+from boostdiff.main_boostdiff import BoostDiff
+import pandas as pd
+import numpy as np
+import os
+
+file_etha = "../data/b_subtilis_salt/exprs_salt.txt"
+file_ctrl = "../data/b_subtilis_salt/exprs_smm.txt"
+
+n_processes = 4
 n_estimators = 50
-n_features = 50
-n_subsamples = 50
-keyword = "test"
-n_processes = 2
+n_features = 2500
+n_subsamples = 20
+keyword = "saltvssmm"
+normalize = True
+loss = "exponential"
+
+output_folder = "../outputs_{}".format(keyword)
+if not os.path.exists(output_folder):
+    os.makedirs(output_folder)
 
 model = BoostDiff()
-model.run(file_disease, file_control, output_folder, n_estimators, \
-          n_features, n_subsamples, keyword=keyword, n_processes=n_processes)
+model.run(file_etha, file_ctrl, output_folder, n_estimators, 
+                  n_features, n_subsamples, n_processes=n_processes, 
+                  keyword=keyword,normalize=normalize,
+                  regulators="all", loss=loss)
 
 ```
 
@@ -136,7 +152,7 @@ BoostDiff will output two subfolders, each containing two txt files.
 <br />
 <br /> Note that BoostDiff runs the algorithm twice:
 <br /> Run 1: The disease condition will be used as the target condition (with control condition as baseline). Results will be generated in the subfolder "disease".
-<br /> Run 2: The control/healthy condition will be used as the target condition (with disease condition as baseline).  Results will be generated in the subfolder "control".
+<br /> Run 2: The control/healthy condition will be used as the target condition (with disease condition as baseline). Results will be generated in the subfolder "control".
 <br /> <br /> In each subfolder, the first txt file shows the data for the mean difference in prediction error between the disease and control samples after training the boosted differential trees. The second txt file contains the raw output network.
 
 ##  Postprocessing: Filtering and Visualization
@@ -148,9 +164,9 @@ conda create --name bd_post --file environment_vis.yml
 conda activate bd_post
 ```
 
-The notebook containing the code for filtering and visualization can be found in `tutorial` > `02_tutorial_visualization.ipynb`. To obtain the final differential network, the raw network should be filtered for target genes in which BoostDiff found a more predictive model for the target condition. This additional step is crucial and part of the pipeline, as a trained model will not always be more predictive of a target condition. 
+To obtain the final differential network, the raw network should be filtered for target genes in which BoostDiff found a more predictive model for the target condition. This additional step is crucial and part of the pipeline, as a trained model will not always be more predictive of a target condition. For edge filtering, we recommend to start with `p=3` to filter for 3rd percentile of the top target genes with the largest differences in prediction errors between the disease and control conditions.
 
-For edge filtering, we recommend to start with `p=3` to filter for 3rd percentile of the top target genes with the largest differences in prediction errors between the disease and control conditions.
+The notebook containing the code for filtering and visualization can be found in `tutorial` > `02_tutorial_visualization.ipynb`. 
 
 ```python
 import networkx as nx
@@ -226,7 +242,7 @@ plot_corr_dists(df_dis, df_con, df_rand, title=title, filename=file_grn, bw_adju
 
 ## Memory and runtime
 
-The memory requirements depend on the number of genes in the expession dataset and the number of samples in each condition. For small datasets, such as the *B. subtilis* dataset with ~2,000 genes and 48 samples per condition, the runtime is ~20mins for `n_processes=2` on a laptop with 16GB memory. For the human datasets, BoostDiff should be run on a high-performance computing cluster. For reference, the runtime for the COVID-19 dataset (GSE156063) used in the paper with ~15,000 genes and around 100 samples per condition is ~9hrs on a local server with 64 cores and 500GB RAM takes run with `n_processes=10`. 
+The memory requirements depend on the number of genes in the expession dataset and the number of samples in each condition. For the real transcriptomics datasets on human disease, BoostDiff should be run on a high-performance computing cluster. For reference, the runtime for the COVID-19 dataset (GSE156063) used in the paper with ~15,000 genes and around 100 samples per condition with `n_processes=10` is ~9hrs on a local server with 64 cores and 500GB RAM. For small datasets, such as the *B. subtilis* dataset with ~1,000 genes and 48 samples per condition, the runtime is ~13mins for `n_processes=4`.
  
 ## Citation 
 
