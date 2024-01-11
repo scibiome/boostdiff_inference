@@ -224,6 +224,10 @@ plot_corr_dists(df_dis, df_con, df_rand, title=title, filename=file_grn, bw_adju
 ```
 ![corr_dists](tutorial/figures/corr_dists.png)
 
+## Memory and runtime
+
+The memory requirements depend on the number of genes in the expession dataset and the number of samples in each condition. For small datasets, such as the *B. subtilis* dataset with ~2,000 genes and 48 samples per condition, the runtime is ~20mins for `n_processes=2` on a laptop with 16GB memory. For the human datasets, BoostDiff should be run on a high-performance computing cluster. For reference, the runtime for the COVID-19 dataset (GSE156063) used in the paper with ~15,000 genes and around 100 samples per condition is ~9hrs on a local server with 64 cores and 500GB RAM takes run with `n_processes=10`. 
+ 
 ## Citation 
 
 Galindez, G. G., List, M., Baumbach, J., Blumenthal, D. B., & Kacprowski, T. (2022). Inference of differential gene regulatory networks from gene expression data using boosted differential trees. bioRxiv. doi: https://doi.org/10.1101/2022.09.26.509450.
